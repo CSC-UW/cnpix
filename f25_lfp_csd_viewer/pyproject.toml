@@ -1,0 +1,44 @@
+[project]
+name = "lfp-csd-viewer"
+version = "0.1.0"
+description = "PyQtGraph-based viewer for KCSD heatmaps with optional LFP trace overlay and hypnogram state strip."
+authors = [
+    { name = "Graham Findlay", email = "gfindlay@wisc.edu" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "rats",
+    "ecephys",
+    "wisc-ecephys-tools",
+    "pyqtgraph>=0.13.7",
+    "PySide6>=6.6.0",
+    "numpy>=1.24.0",
+    "xarray",
+    "zarr>=2.16.0",
+    "click",
+    "pandas>=2.0.0",
+    "pyarrow>=14.0.0",
+]
+
+[project.scripts]
+lfp-csd-viewer = "lfp_csd_viewer.app:main"
+
+[build-system]
+requires = ["uv_build>=0.9.22,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.uv.sources]
+rats = { path = "../", editable = true }
+ecephys = { path = "../../ecephys", editable = true }
+wisc-ecephys-tools = { path = "../../wisc_ecephys_tools", editable = true }
+
+[tool.uv]
+override-dependencies = [
+    "ecephys @ file:///${PROJECT_ROOT}/../../../ecephys",
+]
