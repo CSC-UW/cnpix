@@ -1,0 +1,14 @@
+[project]
+name = "rats"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Graham Findlay", email = "gfindlay@wisc.edu" }
+]
+requires-python = ">=3.14"
+dependencies = ["click"]
+
+[build-system]
+requires = ["uv_build>=0.9.28,<0.10.0"]
+build-backend = "uv_build"
