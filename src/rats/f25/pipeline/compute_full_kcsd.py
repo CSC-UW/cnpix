@@ -43,6 +43,11 @@ def do_subject_experiment(
     csd = xrc.lazy_mapped_kernel_current_source_density(lf, **kcsd_kwargs)
     print(f"  kCSD graph built in {time.time() - t0:.1f}s")
 
+    # Drop object-dtype coords (anatomy labels from assign_laminar_coordinate)
+    obj_coords = [name for name, coord in csd.coords.items() if coord.dtype == object]
+    if obj_coords:
+        csd = csd.drop_vars(obj_coords)
+
     # Save to zarr
     zarr_file = NB.get_experiment_subject_file(experiment, subject, f"{kind}_kcsd.zarr")
     print(f"  Saving to {zarr_file}...")

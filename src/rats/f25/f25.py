@@ -10,6 +10,8 @@ import ecephys.wne.utils
 import wisc_ecephys_tools as wet
 
 if TYPE_CHECKING:
+    from typing import Literal
+
     import xarray as xr
 
 NOD = "novel_objects_deprivation"
@@ -114,3 +116,26 @@ def open_hippocampal_lfps(
     [lo, hi] = params["probes"][probe]["structureBounds"]["hippocampus"]
     is_hippocampal = (lfps["y"] >= lo) & (lfps["y"] <= hi)
     return lfps.sel(channel=is_hippocampal)
+
+
+def _open_kcsd(
+    subject: str,
+    experiment: str,
+    kind: Literal["cortical", "hippocampal"],
+    chunks={},  # Use zarr chunks by default.
+    **kwargs,
+) -> xr.DataArray:
+    import xarray as xr
+
+    kcsd_file = NB.get_experiment_subject_file(experiment, subject, f"{kind}_kcsd.zarr")
+    return xr.open_dataarray(kcsd_file, engine="zarr", chunks=chunks, **kwargs)
+
+
+def open_cortical_kcsd(subject: str, experiment: str) -> xr.DataArray:
+    """Open the pre-computed cortical kCSD."""
+    return _open_kcsd(subject, experiment, "cortical")
+
+
+def open_hippocampal_kcsd(subject: str, experiment: str) -> xr.DataArray:
+    """Open the pre-computed hippocampal kCSD."""
+    return _open_kcsd(subject, experiment, "hippocampal")
