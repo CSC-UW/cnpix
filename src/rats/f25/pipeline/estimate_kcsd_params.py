@@ -47,11 +47,17 @@ def do_subject_experiment(
 
     # Estimate CSD
     bad_chans = np.array(params["probes"][probe]["badChannels"])
-    print(
-        f"  Estimating kCSD (L-curve) with {len(bad_chans)} bad channels dropped..."
-    )
+    print(f"  Estimating kCSD (L-curve) with {len(bad_chans)} bad channels dropped...")
     t0 = time.time()
-    csd = xrc.kernel_current_source_density(lf, drop=bad_chans, do_lcurve=True)
+    lambdas = np.logspace(-10, -1, 100, base=10)  # These are NOT default kCSD lambdas,
+    #                                               contrary to what the kCSD docs say.
+    lcurve_kwargs = {
+        "cortical": {"lambdas": lambdas[77:]},  # Constrain to a minimum of 0.001
+        "hippocampal": None,
+    }[kind]
+    csd = xrc.kernel_current_source_density(
+        lf, drop=bad_chans, do_lcurve=True, lcurve_kwargs=lcurve_kwargs
+    )
     print(f"  kCSD estimation done in {time.time() - t0:.1f}s")
 
     # Store CSD params
