@@ -7,7 +7,9 @@ authors = [
     { name = "Graham Findlay", email = "graham.b.findlay@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "loupe @ git+https://github.com/CSC-UW/loupe.git@main",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.2,<0.10.0"]
