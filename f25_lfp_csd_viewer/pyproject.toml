@@ -7,9 +7,9 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "rats",
-    "ecephys",
-    "wisc-ecephys-tools",
+    "rats @ git+https://github.com/CSC-UW/rats.git@main",
+    "ecephys @ git+https://github.com/CSC-UW/ecephys.git@develop",
+    "wisc-ecephys-tools @ git+https://github.com/CSC-UW/wisc_ecephys_tools.git@main",
     "pyqtgraph>=0.13.7",
     "PySide6>=6.6.0",
     "numpy>=1.24.0",
@@ -33,12 +33,3 @@ dev = [
     "ruff",
 ]
 
-[tool.uv.sources]
-rats = { path = "../", editable = true }
-ecephys = { path = "../../ecephys", editable = true }
-wisc-ecephys-tools = { path = "../../wisc_ecephys_tools", editable = true }
-
-[tool.uv]
-override-dependencies = [
-    "ecephys @ file:///${PROJECT_ROOT}/../../../ecephys",
-]
