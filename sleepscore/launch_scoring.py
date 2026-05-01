@@ -1,24 +1,16 @@
-# %%
 from pathlib import Path
 
 import loupe as lp
 import xarray as xr
 
 SUBJECT = "CNPIX12-Santiago"
+local_subject_dir = Path(f"~/Downloads/{SUBJECT}").expanduser()
 
-scoring_lfp = Path(
-    f"/Volumes/npx_nfs/nobak/shared/novel_objects_deprivation/{SUBJECT}/scoring_lfp.zarr"
-)
-scoring_emg = Path(
-    f"/Volumes/npx_nfs/nobak/shared/novel_objects_deprivation/{SUBJECT}/scoring_emg.zarr"
-)
 
-scoring_lfp = xr.open_dataarray(scoring_lfp).load()
-scoring_emg = xr.open_dataarray(scoring_emg).load()
+scoring_lfp = xr.open_dataarray(local_subject_dir / "scoring_lfp.zarr").load()
+scoring_emg = xr.open_dataarray(local_subject_dir / "scoring_emg.zarr").load()
 
-hypnogram_path = Path(
-    f"/Volumes/npx_nfs/shared_s3/novel_objects_deprivation/{SUBJECT}/hypnogram.htsv"
-)
+hypnogram_path = local_subject_dir / "hypnogram.htsv"
 hypnogram_schema = lp.LabelSchema(
     start_col="start_time",
     end_col="end_time",
