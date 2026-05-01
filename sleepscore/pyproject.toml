@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "loupe @ git+https://github.com/CSC-UW/loupe.git@main",
+    "xarray",
 ]
 
 [build-system]
