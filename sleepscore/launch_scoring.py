@@ -6,8 +6,9 @@ import xarray as xr
 SUBJECT = "CNPIX12-Santiago"
 local_subject_dir = Path(f"~/Downloads/{SUBJECT}").expanduser()
 
-
+# Top-to-bottom: Superficial CX (PPC), Deep CX (PPC), Hippocampus (CA1-SR)
 scoring_lfp = xr.open_dataarray(local_subject_dir / "scoring_lfp.zarr").load()
+# Derived/synthetic EMG. Changes slowly. Having right Y axis limits is important
 scoring_emg = xr.open_dataarray(local_subject_dir / "scoring_emg.zarr").load()
 
 hypnogram_path = local_subject_dir / "hypnogram.htsv"
