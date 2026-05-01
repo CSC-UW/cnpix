@@ -52,7 +52,7 @@ state_colors = {
 
 w = lp.view(
     data=[
-        lp.TraceConfig(data=scoring_lfp, mode="dense"),
+        lp.TraceConfig(data=scoring_lfp, mode="stacked-subplots"),
         lp.TraceConfig(data=scoring_emg),
     ],
     keymap=keymap,
@@ -60,3 +60,7 @@ w = lp.view(
     labels=str(hypnogram_path) if hypnogram_path.exists() else None,
     label_schema=hypnogram_schema,
 )
+
+# Suggestions:
+# - Set label alpha to 0.5
+# - View 1000s, autoscale Y-axes, then zoom in to ~10-20s.
