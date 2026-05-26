@@ -9,6 +9,9 @@ SUBJECT = "CNPIX12-Santiago"
 HYPNOGRAM_FNAME = "Full.Liberal_consensus_hypnogram.htsv"
 UNIT_PROBES = ["imec0", "imec1"]
 LFP_PROBES = ["imec0", "imec1"]
+LOUPE_PROFILE = "simple"  # "simple" or "simple_with_units"
+
+assert LOUPE_PROFILE in ("simple", "simple_with_units")
 
 data_dir = MOUNT_POINT / SUBJECT
 
@@ -19,7 +22,7 @@ scoring_lfp = xr.open_dataarray(data_dir / "scoring_lfp.zarr").load()
 scoring_emg = xr.open_dataarray(data_dir / "scoring_emg.zarr").load()
 
 hypnogram_path = data_dir / HYPNOGRAM_FNAME
-hypnogram_schema = lp.LabelSchema(
+hypnogram_schema = lp.IntervalLabelSchema(
     start_col="start_time",
     end_col="end_time",
     label_col="state",
@@ -57,82 +60,64 @@ state_colors = {
     "AWK": "#32cd32",  # limegreen
 }
 
-units = {}
-for probe in UNIT_PROBES:
-    unit_path = data_dir / f"{probe}.units.parquet"
-    if unit_path.exists():
-        print(f"Loading {unit_path}...")
-        unit_data = pl.read_parquet(unit_path)
-        units[probe] = unit_data
-
-lfps = {}
-for probe in LFP_PROBES:
-    lfp_path = data_dir / f"{probe}.lf.zarr"
-    if lfp_path.exists():
-        print(f"Loading {lfp_path}...")
-        lfp_data = xr.open_zarr(lfp_path)["lfp"]
-        lfps[probe] = lfp_data
-
-anatomy = {}
-anat_probes = sorted(list(set(UNIT_PROBES) | set(LFP_PROBES)))
-for probe in anat_probes:
-    anat_path = data_dir / f"{probe}.structures.htsv"
-    if anat_path.exists():
-        print(f"Loading {anat_path}...")
-        anat_data = pl.read_csv(anat_path, separator="\t")
-        anatomy[probe] = anat_data
-
-
-def _y_to_acronym(y, anat):
-    m = anat.filter(pl.col("lo").le(y) & pl.col("hi").ge(y))["acronym"]
-    return m[0] if len(m) else "???"
-
-
-print(f"Labeling {anat_probes} with anatomy...")
-for probe, anat in anatomy.items():
-    if probe in lfps:
-        lf = lfps[probe]
-        anatomy_coord = [_y_to_acronym(y, anat) for y in lf["y"].values]
-        lfps[probe] = lf.assign_coords(anatomy=("channel", anatomy_coord))
-    if probe in units:
-        u = units[probe]
-        unit_anatomy = [_y_to_acronym(d, anat) for d in u["depth"].to_list()]
-        units[probe] = u.with_columns(pl.Series("anatomy", unit_anatomy))
-
-# Build a per-probe spike raster, with units ordered by depth.
-matrix_df = None
-if UNIT_PROBES:
-    print("Pushing units around...")
-    spike_dfs = []
+spikes = {}
+if LOUPE_PROFILE == "simple_with_units":
+    units = {}
     for probe in UNIT_PROBES:
-        if probe not in units:
-            continue
-        u_sorted = units[probe].sort("depth").with_row_index("depth_rank")
-        spikes = (
-            u_sorted.select(["depth_rank", "spike_times"])
+        unit_path = data_dir / f"{probe}.units.parquet"
+        if unit_path.exists():
+            print(f"Loading {unit_path}...")
+            units[probe] = pl.read_parquet(unit_path)
+
+    anatomy = {}
+    for probe in sorted(set(UNIT_PROBES)):
+        anat_path = data_dir / f"{probe}.structures.htsv"
+        if anat_path.exists():
+            print(f"Loading {anat_path}...")
+            anatomy[probe] = pl.read_csv(anat_path, separator="\t")
+
+    def _y_to_acronym(y, anat):
+        m = anat.filter(pl.col("lo").le(y) & pl.col("hi").ge(y))["acronym"]
+        return m[0] if len(m) else "???"
+
+    print(f"Labeling {list(anatomy)} with anatomy...")
+    for probe, anat in anatomy.items():
+        if probe in units:
+            u = units[probe]
+            unit_anatomy = [_y_to_acronym(d, anat) for d in u["depth"].to_list()]
+            units[probe] = u.with_columns(pl.Series("anatomy", unit_anatomy))
+
+    for probe in units:
+        print(f"Exploding spike times for {probe}...")
+        spikes[probe] = (
+            units[probe]
+            .select(["depth", "anatomy", "spike_times"])
             .explode("spike_times")
             .drop_nulls("spike_times")
-            .rename({"spike_times": "time"})
-            .with_columns(pl.lit(probe).alias("probe"))
         )
-        spike_dfs.append(spikes)
-    if spike_dfs:
-        matrix_df = pl.concat(spike_dfs)
+
+data_list = [
+    lp.TraceConfig(data=scoring_lfp, mode="stacked-subplots"),
+    lp.TraceConfig(data=scoring_emg),
+] + [
+    lp.RasterConfig(
+        data=spikes[probe],
+        time_col="spike_times",
+        order_by="depth",
+        split_by="anatomy",
+        array_name=probe,
+    )
+    for probe in spikes
+]
 
 print("Launching Loupe...")
 w = lp.view(
-    data=[
-        lp.TraceConfig(data=scoring_lfp, mode="stacked-subplots"),
-        lp.TraceConfig(data=scoring_emg),
-    ],
-    matrix_df=matrix_df,
-    y_col="depth_rank",
-    group_col="probe",
-    matrix_name="units",
+    data_list,
     keymap=keymap,
     label_colors=state_colors,
-    labels=str(hypnogram_path) if hypnogram_path.exists() else None,
-    label_schema=hypnogram_schema,
+    interval_labels=str(hypnogram_path) if hypnogram_path.exists() else None,
+    interval_label_schema=hypnogram_schema,
+    interval_label_alpha=0.25,
 )
 
 # Suggestions:
