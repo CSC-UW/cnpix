@@ -13,6 +13,8 @@ LOUPE_PROFILE = "simple"  # "simple" or "simple_with_units"
 
 assert LOUPE_PROFILE in ("simple", "simple_with_units")
 
+need_units = LOUPE_PROFILE == "simple_with_units"
+
 data_dir = MOUNT_POINT / SUBJECT
 
 # Top-to-bottom: Hippocampus (CA1-SR), Deep CX (PPC), HippSuperficial CX (PPC)
@@ -60,41 +62,45 @@ state_colors = {
     "AWK": "#32cd32",  # limegreen
 }
 
-spikes = {}
-if LOUPE_PROFILE == "simple_with_units":
-    units = {}
+units = {}
+if need_units:
     for probe in UNIT_PROBES:
         unit_path = data_dir / f"{probe}.units.parquet"
         if unit_path.exists():
             print(f"Loading {unit_path}...")
             units[probe] = pl.read_parquet(unit_path)
 
-    anatomy = {}
-    for probe in sorted(set(UNIT_PROBES)):
-        anat_path = data_dir / f"{probe}.structures.htsv"
-        if anat_path.exists():
-            print(f"Loading {anat_path}...")
-            anatomy[probe] = pl.read_csv(anat_path, separator="\t")
+anatomy = {}
+anat_probes = sorted(set(UNIT_PROBES) if need_units else [])
+for probe in anat_probes:
+    anat_path = data_dir / f"{probe}.structures.htsv"
+    if anat_path.exists():
+        print(f"Loading {anat_path}...")
+        anatomy[probe] = pl.read_csv(anat_path, separator="\t")
 
-    def _y_to_acronym(y, anat):
-        m = anat.filter(pl.col("lo").le(y) & pl.col("hi").ge(y))["acronym"]
-        return m[0] if len(m) else "???"
 
+def _y_to_acronym(y, anat):
+    m = anat.filter(pl.col("lo").le(y) & pl.col("hi").ge(y))["acronym"]
+    return m[0] if len(m) else "???"
+
+
+if anatomy:
     print(f"Labeling {list(anatomy)} with anatomy...")
-    for probe, anat in anatomy.items():
-        if probe in units:
-            u = units[probe]
-            unit_anatomy = [_y_to_acronym(d, anat) for d in u["depth"].to_list()]
-            units[probe] = u.with_columns(pl.Series("anatomy", unit_anatomy))
+for probe, anat in anatomy.items():
+    if probe in units:
+        u = units[probe]
+        unit_anatomy = [_y_to_acronym(d, anat) for d in u["depth"].to_list()]
+        units[probe] = u.with_columns(pl.Series("anatomy", unit_anatomy))
 
-    for probe in units:
-        print(f"Exploding spike times for {probe}...")
-        spikes[probe] = (
-            units[probe]
-            .select(["depth", "anatomy", "spike_times"])
-            .explode("spike_times")
-            .drop_nulls("spike_times")
-        )
+spikes = {}
+for probe in units:
+    print(f"Exploding spike times for {probe}...")
+    spikes[probe] = (
+        units[probe]
+        .select(["depth", "anatomy", "spike_times"])
+        .explode("spike_times")
+        .drop_nulls("spike_times")
+    )
 
 data_list = [
     lp.TraceConfig(data=scoring_lfp, mode="stacked-subplots"),
