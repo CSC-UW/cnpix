@@ -9,7 +9,7 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "rats",
+    "cnpix",
     "sleepscore",
 ]
 
@@ -186,6 +186,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/23/e4/796662cd90cf80e3a
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ee/ae/8e92f8058baf87f6c7d86ee7e457668690195cc77efedb8d3797a06e3940/click-8.4.0-py3-none-any.whl", hash = "sha256:40c50b7c6c6adac2823d411041ec84f3f103f1b280d5e9ce0d7f998995832f81", size = 116147, upload-time = "2026-05-17T00:47:56.842Z" },
 ]
+
+[[package]]
+name = "cnpix"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "click" }]
 
 [[package]]
 name = "colorama"
@@ -464,7 +475,7 @@ wheels = [
 [[package]]
 name = "loupe"
 version = "0.1.0"
-source = { git = "https://github.com/CSC-UW/loupe.git?rev=feature%2Fbetter-labels#daf542fa80824f0b6db37630f95c738d8ce1e42c" }
+source = { git = "https://github.com/CSC-UW/loupe.git?rev=main#d6a25d2375e0c3a4fff7e3a36a70c69c7b10b0de" }
 dependencies = [
     { name = "ipykernel" },
     { name = "numpy" },
@@ -983,17 +994,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rats"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "click" }]
-
-[[package]]
 name = "referencing"
 version = "0.37.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1090,7 +1090,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "loupe", git = "https://github.com/CSC-UW/loupe.git?rev=feature%2Fbetter-labels" },
+    { name = "loupe", git = "https://github.com/CSC-UW/loupe.git?rev=main" },
     { name = "xarray" },
 ]
 

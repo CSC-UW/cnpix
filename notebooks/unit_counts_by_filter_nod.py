@@ -2,7 +2,7 @@
 # # NOD unit counts by quality filter
 #
 # Per-subject totals of spike-sorted units that pass each of the four
-# threshold sets defined in `rats.units.get_threshold_kwargs`:
+# threshold sets defined in `cnpix.units.get_threshold_kwargs`:
 #
 # - `mua` — `required_threshold="conservative"`, no isolation/false-negative gates.
 # - `permissive` — `sua_permissive`: required + permissive isolation + permissive
@@ -13,7 +13,7 @@
 # Subjects are discovered from
 # `wisc_ecephys_tools.rats.utils.get_subject_experiment_probe_tuples` so every
 # CNPIX subject whose YAML lists `novel_objects_deprivation` is included
-# (independent of the hard-coded `rats.f25._get_manifest`). Counts are summed
+# (independent of the hard-coded `cnpix.f25._get_manifest`). Counts are summed
 # across probes for each subject; a subject with no loadable probe sorting is
 # shown as `N/A`.
 
@@ -27,7 +27,7 @@ import wisc_ecephys_tools.rats.utils  # noqa: F401  (registers wet.rats)
 from ecephys.units import siutils as units_siutils
 from ecephys.wne import siutils as wne_siutils
 
-from rats.units import get_threshold_kwargs
+from cnpix.units import get_threshold_kwargs
 
 EXPERIMENT = "novel_objects_deprivation"
 

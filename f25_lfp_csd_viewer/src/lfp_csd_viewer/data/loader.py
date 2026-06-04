@@ -11,7 +11,7 @@ import xarray as xr
 import ecephys.hypnogram as hyp
 import wisc_ecephys_tools.rats.cnd_hgs as cnd_hgs
 
-from rats import f25
+from cnpix import f25
 
 from lfp_csd_viewer.data.xarray_source import XarrayDataSource
 

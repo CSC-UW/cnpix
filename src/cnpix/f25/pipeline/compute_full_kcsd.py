@@ -5,7 +5,7 @@ import click
 import numpy as np
 from ecephys.xrsig import core as xrc
 
-from rats import f25
+from cnpix import f25
 
 NB = f25.NB
 

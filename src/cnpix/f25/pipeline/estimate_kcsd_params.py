@@ -7,7 +7,7 @@ from ecephys.xrsig import core as xrc
 from wisc_ecephys_tools.rats import cnd_hgs
 
 import wisc_ecephys_tools as wet
-from rats import f25
+from cnpix import f25
 
 S3 = wet.get_sglx_project("shared")
 NB = wet.get_sglx_project("shared_nobak")

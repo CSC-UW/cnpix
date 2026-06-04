@@ -7,7 +7,7 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "rats @ git+https://github.com/CSC-UW/rats.git@main",
+    "cnpix @ git+https://github.com/CSC-UW/cnpix.git@main",
     "ecephys @ git+https://github.com/CSC-UW/ecephys.git@develop",
     "wisc-ecephys-tools @ git+https://github.com/CSC-UW/wisc_ecephys_tools.git@main",
     "pyqtgraph>=0.13.7",
