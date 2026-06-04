@@ -8,9 +8,6 @@ resolution-markers = [
     "sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
-[manifest]
-overrides = [{ name = "ecephys", editable = "../../ecephys" }]
-
 [[package]]
 name = "altair"
 version = "6.0.0"
@@ -345,6 +342,14 @@ wheels = [
 ]
 
 [[package]]
+name = "cnpix"
+version = "0.1.0"
+source = { git = "https://github.com/CSC-UW/cnpix.git?rev=main#e76cea76f9b74b478c2805fc7020452397cb538d" }
+dependencies = [
+    { name = "click" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -523,7 +528,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf57
 [[package]]
 name = "ecephys"
 version = "0.0.6"
-source = { editable = "../../ecephys" }
+source = { git = "https://github.com/CSC-UW/ecephys.git?rev=develop#12455fcc6cfd4587e7014c6716c0e2ffde31226c" }
 dependencies = [
     { name = "brainglobe-atlasapi" },
     { name = "colorcet" },
@@ -537,6 +542,7 @@ dependencies = [
     { name = "kcsd" },
     { name = "mat73" },
     { name = "matplotlib" },
+    { name = "numba" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "polars" },
@@ -554,47 +560,6 @@ dependencies = [
     { name = "statsmodels" },
     { name = "tdt" },
     { name = "xarray", extra = ["complete"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "brainglobe-atlasapi" },
-    { name = "colorcet" },
-    { name = "dask", extras = ["complete"] },
-    { name = "elephant", marker = "extra == 'deprecated'" },
-    { name = "ephyviewer", git = "https://github.com/CSC-UW/ephyviewer.git" },
-    { name = "ibl-neuropixel" },
-    { name = "ipykernel" },
-    { name = "ipympl" },
-    { name = "ipython" },
-    { name = "ipywidgets" },
-    { name = "kcsd", git = "https://github.com/CSC-UW/kCSD-python.git" },
-    { name = "mat73" },
-    { name = "matplotlib", specifier = ">=3.7" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "polars" },
-    { name = "pyedflib" },
-    { name = "pyfftw" },
-    { name = "pyside6" },
-    { name = "pyyaml" },
-    { name = "ripple-detection" },
-    { name = "scikit-learn" },
-    { name = "scipy" },
-    { name = "seaborn" },
-    { name = "sortednp" },
-    { name = "spikeinterface" },
-    { name = "ssqueezepy" },
-    { name = "statsmodels" },
-    { name = "tdt" },
-    { name = "xarray", extras = ["complete"] },
-]
-provides-extras = ["deprecated"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=7.0.0" },
-    { name = "ruff" },
 ]
 
 [[package]]
@@ -1033,13 +998,13 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "cnpix" },
     { name = "ecephys" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pyarrow" },
     { name = "pyqtgraph" },
     { name = "pyside6" },
-    { name = "rats" },
     { name = "wisc-ecephys-tools" },
     { name = "xarray" },
     { name = "zarr" },
@@ -1054,14 +1019,14 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click" },
-    { name = "ecephys", editable = "../../ecephys" },
+    { name = "cnpix", git = "https://github.com/CSC-UW/cnpix.git?rev=main" },
+    { name = "ecephys", git = "https://github.com/CSC-UW/ecephys.git?rev=develop" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pyarrow", specifier = ">=14.0.0" },
     { name = "pyqtgraph", specifier = ">=0.13.7" },
     { name = "pyside6", specifier = ">=6.6.0" },
-    { name = "rats", editable = "../" },
-    { name = "wisc-ecephys-tools", editable = "../../wisc_ecephys_tools" },
+    { name = "wisc-ecephys-tools", git = "https://github.com/CSC-UW/wisc_ecephys_tools.git?rev=main" },
     { name = "xarray" },
     { name = "zarr", specifier = ">=2.16.0" },
 ]
@@ -2109,17 +2074,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rats"
-version = "0.1.0"
-source = { editable = "../" }
-dependencies = [
-    { name = "click" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "click" }]
-
-[[package]]
 name = "referencing"
 version = "0.37.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2690,7 +2644,7 @@ wheels = [
 [[package]]
 name = "wisc-ecephys-tools"
 version = "0.1.1"
-source = { editable = "../../wisc_ecephys_tools" }
+source = { git = "https://github.com/CSC-UW/wisc_ecephys_tools.git?rev=main#cca4f396f7d014de84aefc7a29f773d45414b590" }
 dependencies = [
     { name = "altair" },
     { name = "brainglobe-atlasapi" },
@@ -2698,18 +2652,6 @@ dependencies = [
     { name = "ecephys" },
     { name = "thefuzz" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "altair" },
-    { name = "brainglobe-atlasapi" },
-    { name = "docopt" },
-    { name = "ecephys", git = "https://github.com/CSC-UW/ecephys.git?branch=develop" },
-    { name = "thefuzz" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "ruff" }]
 
 [[package]]
 name = "wrapt"
