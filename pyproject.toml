@@ -1,17 +1,44 @@
 [project]
 name = "cnpix"
 version = "0.1.0"
-description = "Add your description here"
+description = "Project-agnostic code for the CNPIX chronic Neuropixels rat dataset, including unit quality tiers, autocorrelogram metrics, and cell-type classification."
 readme = "README.md"
 authors = [
     { name = "Graham Findlay", email = "gfindlay@wisc.edu" }
 ]
 requires-python = ">=3.14"
-dependencies = ["click"]
+dependencies = [
+    "brainglobe-atlasapi",
+    "click",
+    "ecephys @ git+https://github.com/CSC-UW/ecephys.git@develop",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scipy",
+    "tqdm",
+    "wisc-ecephys-tools @ git+https://github.com/CSC-UW/wisc_ecephys_tools.git@main",
+    "xarray",
+    "zarr",
+]
+
+[project.scripts]
+cnpix-units = "cnpix.units.cli:main"
+
+[dependency-groups]
+dev = [
+    "ipykernel",
+    "pytest>=7.0.0",
+    "ruff",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.28,<0.10.0"]
 build-backend = "uv_build"
+
+# Sibling workspace packages are declared as direct git URLs above so that an
+# external user can `uv sync` this package alone. In the workspace, the local
+# editable sources in gfys_workspace/pyproject.toml override these URLs.
 
 [tool.uv.workspace]
 members = [
