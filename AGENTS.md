@@ -9,6 +9,10 @@ metrics, cell-type labels, anatomical region mapping.
 The rule of thumb: if two papers analyzing the same rats would both want it, and would
 be embarrassed to disagree about it, it goes in `cnpix`.
 
+Areas: `units/` (quality tiers, ACG metrics, cell-type labels, region mapping), `f25/`,
+and `evaluation/` (manual OFF-period ground truth, label QC, and the pixel/event metric
+kernels every detection method is scored with — see `cnpix/evaluation/__init__.py`).
+
 ## Build & Test
 
 ```bash
