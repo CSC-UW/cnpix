@@ -19,7 +19,8 @@ from __future__ import annotations
 import pathlib
 
 import wisc_ecephys_tools as wet
-from wisc_ecephys_tools import rats
+
+from cnpix import constants
 
 __all__ = [
     "DEFAULT_EXPERIMENT",
@@ -29,7 +30,7 @@ __all__ = [
     "label_dir",
 ]
 
-DEFAULT_EXPERIMENT: str = rats.constants.SleepDeprivationExperiments.NOD
+DEFAULT_EXPERIMENT: str = constants.DEFAULT_EXPERIMENT
 
 #: Manual ground-truth labels are shared (s3-backed); model predictions are not.
 MANUAL_LABELS_PROJECT = "offproj_s3"

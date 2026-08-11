@@ -16,13 +16,20 @@ dependencies = [
     "pandas",
     "pyarrow",
     "scipy",
+    "spikeinterface",
     "tqdm",
     "wisc-ecephys-tools @ git+https://github.com/CSC-UW/wisc_ecephys_tools.git@main",
     "xarray",
     "zarr",
 ]
 
+[project.optional-dependencies]
+# Legacy AP-band motion vectors come from the legacy sorting pipeline. Only
+# cnpix.mua.motion needs it, and only when correction is requested.
+motion = ["lnsp @ git+https://github.com/CSC-UW/legacy_npix_sorting_pipeline.git@main"]
+
 [project.scripts]
+cnpix-mua = "cnpix.mua.cli:main"
 cnpix-units = "cnpix.units.cli:main"
 
 [dependency-groups]

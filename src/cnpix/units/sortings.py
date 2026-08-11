@@ -15,6 +15,7 @@ from ecephys.wne import siutils as wne_siutils
 from ecephys.wne.sglx import legacy_sorting
 from wisc_ecephys_tools import rats
 
+from cnpix import constants
 from cnpix.units.thresholds import get_threshold_kwargs
 
 __all__ = [
@@ -27,7 +28,7 @@ __all__ = [
 
 # As of 2026, sortings exist only for the `full` alias of this experiment;
 # `rats.utils.has_sorting` asserts as much.
-DEFAULT_EXPERIMENT = rats.constants.SleepDeprivationExperiments.NOD
+DEFAULT_EXPERIMENT = constants.DEFAULT_EXPERIMENT
 
 # The whole-recording, artifact-excluded hypnogram. ACGs are computed over this.
 FULL_CONSERVATIVE = "Full.Conservative"

@@ -9,8 +9,12 @@ metrics, cell-type labels, anatomical region mapping.
 The rule of thumb: if two papers analyzing the same rats would both want it, and would
 be embarrassed to disagree about it, it goes in `cnpix`.
 
+Dataset-wide constants live once, in `cnpix/constants.py` (`DEFAULT_EXPERIMENT`).
+Do not redefine them per area.
+
 Areas: `units/` (quality tiers, ACG metrics, cell-type labels, region mapping), `f25/`,
-and `evaluation/` (manual OFF-period ground truth, label QC, and the pixel/event metric
+`mua/` (the MUA amplitude-envelope preprocessing chain every MUA-based OFF detector
+starts from, plus its staging helpers and the `cnpix-mua` CLI), and `evaluation/` (manual OFF-period ground truth, label QC, and the pixel/event metric
 kernels every detection method is scored with — see `cnpix/evaluation/__init__.py`).
 
 ## Build & Test
@@ -28,7 +32,29 @@ uv run --all-extras --group dev ruff check ../cnpix/src
 | Module | Purpose |
 |---|---|
 | `cnpix.units` | Unit quality tiers, ACG metrics, cell-type classification |
-| `cnpix.f25` | Findlay-2025 LFP/CSD helpers |
+| `cnpix.f25` | Findlay-2025 LFP/CSD helpers, plus `ipower` (shared with the local-sleep paper) |
+| `cnpix.mua` | MUA amplitude envelope: preprocessing chain, `mua_traces.zarr` paths, legacy motion, NVMe staging |
+| `cnpix.evaluation` | Manual OFF-period ground truth, label QC, pixel/event metric kernels |
+
+## `cnpix.mua`
+
+One preprocessing chain per (subject, probe) produces `mua_traces.zarr`; every
+MUA-based OFF detector reads that same file, so the signal is never re-derived --
+or silently re-derived *differently* -- per method.
+
+```bash
+cnpix-mua stage-in         SUBJECT PROBE   # NFS -> local NVMe (rclone, parallel)
+cnpix-mua write-mua-traces SUBJECT PROBE   # the chain -> mua_traces.zarr
+cnpix-mua retrieve         SUBJECT PROBE   # NVMe -> NFS
+cnpix-mua cleanup          SUBJECT PROBE   # free the NVMe copies
+```
+
+The chain is `depth_order -> bandpass(300-5000) -> phase_shift -> detect/interpolate
+bad channels -> highpass_spatial_filter -> [motion] -> rectify -> resample(500)`.
+
+Legacy AP-band motion correction (`cnpix.mua.motion`) needs `lnsp`, which is an
+**optional** dependency -- install `cnpix[motion]`. It is imported lazily, so a plain
+`cnpix` install never pulls in the legacy sorting pipeline.
 
 ## `cnpix.units`
 
