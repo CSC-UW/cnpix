@@ -1,8 +1,6 @@
 ---
 title: Porting the unit-metrics and cell-type pipeline out of findlay2025a
-status: active
 updated: 2026-08-06
-confirmed_by_user: not_required
 ---
 
 # Porting the unit-metrics and cell-type pipeline into `cnpix`
