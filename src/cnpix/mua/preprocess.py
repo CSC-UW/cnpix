@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pandas as pd
 import spikeinterface as si
 import spikeinterface.preprocessing as sp
@@ -26,7 +27,7 @@ import spikeinterface.preprocessing as sp
 if TYPE_CHECKING:
     from ecephys import wne
 
-__all__ = ["build_preprocessing_chain"]
+__all__ = ["build_preprocessing_chain", "get_channel_subset"]
 
 
 def build_preprocessing_chain(
@@ -104,3 +105,27 @@ def build_preprocessing_chain(
     rec = sp.resample(rec, resample_rate=resample_rate, gap_tolerance_ms=0.0)
 
     return rec
+
+def get_channel_subset(
+    recording: si.BaseRecording,
+    y_lo: float | None,
+    y_hi: float | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Identify channels within a depth range.
+
+    Args:
+        recording: Depth-ordered SpikeInterface recording.
+        y_lo: Lower depth bound in microns, or None for no bound.
+        y_hi: Upper depth bound in microns, or None for no bound.
+
+    Returns:
+        Tuple of ``(channel_ids, y_coords, mask)`` where mask is a
+        boolean array over all channels.
+    """
+    all_y = recording.get_channel_locations()[:, 1]
+    mask = np.ones(len(all_y), dtype=bool)
+    if y_lo is not None:
+        mask &= all_y >= y_lo
+    if y_hi is not None:
+        mask &= all_y <= y_hi
+    return recording.get_channel_ids()[mask], all_y[mask], mask

@@ -33,6 +33,7 @@ from cnpix.evaluation.metrics import (
     compute_event_metrics,
     compute_per_event_pixel_metrics,
     compute_pixel_metrics,
+    metrics_from_counts,
     summarize_event_ious,
 )
 
@@ -48,5 +49,6 @@ __all__ = [
     "compute_event_metrics",
     "compute_per_event_pixel_metrics",
     "compute_pixel_metrics",
+    "metrics_from_counts",
     "summarize_event_ious",
 ]

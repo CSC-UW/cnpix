@@ -19,6 +19,66 @@ import pandas as pd
 import scipy.ndimage
 
 
+def metrics_from_counts(
+    tp: int, fp: int, fn: int, tn: int | None = None
+) -> dict:
+    """Derive classification metrics from raw confusion-matrix counts.
+
+    Parameters
+    ----------
+    tp, fp, fn
+        True-positive, false-positive and false-negative counts.
+    tn
+        True-negative count. Optional because the per-event metrics have no
+        meaningful negative class: when ``None``, ``TN`` and ``specificity``
+        are omitted from the result.
+
+    Returns
+    -------
+    dict
+        Keys ``TP``, ``FP``, ``FN``, (``TN``,) ``sensitivity``,
+        (``specificity``,) ``precision``, ``F1``, ``IoU``. Genuinely undefined
+        ratios are ``nan`` rather than 0, so that "undefined" stays
+        distinguishable from "defined and zero" when metrics are averaged: an
+        empty comparison (nothing labeled, nothing detected) is ``nan``
+        throughout, and ``sensitivity``/``F1`` are ``nan`` when there is no
+        ground truth to recall.
+
+        A detector that returns nothing where there *was* something to find has
+        failed, not produced an undefined score, so ``precision`` and ``F1`` are
+        a defined ``0`` whenever ``tp == 0`` but labels or detections exist.
+        This matters because the ``nan`` structures are never a random subset --
+        they are exactly a detector's failures -- so dropping them from a
+        cross-structure mean biases every metric optimistically, and most for
+        the most conservative detectors. Per-structure ``idxmax`` callers are
+        unaffected: a defined 0 still loses to any positive score.
+    """
+    empty = (tp + fp + fn) == 0  # nothing labeled and nothing detected
+    no_reference = (tp + fn) == 0  # no ground truth: recall is undefined
+
+    sensitivity = float("nan") if no_reference else tp / (tp + fn)
+    precision = float("nan") if empty else (tp / (tp + fp) if (tp + fp) > 0 else 0.0)
+    f1 = (
+        float("nan")
+        if (empty or no_reference)
+        else (
+            0.0 if tp == 0 else 2 * precision * sensitivity / (precision + sensitivity)
+        )
+    )
+    iou = float("nan") if empty else tp / (tp + fp + fn)
+
+    out = {"TP": tp, "FP": fp, "FN": fn}
+    if tn is not None:
+        out["TN"] = tn
+    out["sensitivity"] = sensitivity
+    if tn is not None:
+        out["specificity"] = tn / (tn + fp) if (tn + fp) > 0 else float("nan")
+    out["precision"] = precision
+    out["F1"] = f1
+    out["IoU"] = iou
+    return out
+
+
 def compute_pixel_metrics(
     manual: np.ndarray,
     predicted: np.ndarray,
@@ -49,32 +109,12 @@ def compute_pixel_metrics(
     m = manual[np.ix_(chunks, rows)] > 0
     p = predicted[np.ix_(chunks, rows)] > 0
 
-    tp = int((m & p).sum())
-    fp = int((~m & p).sum())
-    fn = int((m & ~p).sum())
-    tn = int((~m & ~p).sum())
-
-    sensitivity = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
-    specificity = tn / (tn + fp) if (tn + fp) > 0 else float("nan")
-    precision = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
-    f1 = (
-        2 * precision * sensitivity / (precision + sensitivity)
-        if (precision + sensitivity) > 0
-        else float("nan")
+    return metrics_from_counts(
+        tp=int((m & p).sum()),
+        fp=int((~m & p).sum()),
+        fn=int((m & ~p).sum()),
+        tn=int((~m & ~p).sum()),
     )
-    iou = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else float("nan")
-
-    return {
-        "TP": tp,
-        "FP": fp,
-        "FN": fn,
-        "TN": tn,
-        "sensitivity": sensitivity,
-        "specificity": specificity,
-        "precision": precision,
-        "F1": f1,
-        "IoU": iou,
-    }
 
 
 def compute_per_event_pixel_metrics(
@@ -123,29 +163,14 @@ def compute_per_event_pixel_metrics(
         else:
             p_mask = np.zeros_like(m_mask)
 
-        tp = int((m_mask & p_mask).sum())
-        fp = int((~m_mask & p_mask).sum())
-        fn = int((m_mask & ~p_mask).sum())
-
-        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
-        precision = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
-        f1 = (
-            2 * precision * sensitivity / (precision + sensitivity)
-            if (precision + sensitivity) > 0
-            else float("nan")
-        )
-        iou = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else float("nan")
-
         records.append(
             {
                 "label": int(lbl),
-                "TP": tp,
-                "FP": fp,
-                "FN": fn,
-                "sensitivity": sensitivity,
-                "precision": precision,
-                "F1": f1,
-                "IoU": iou,
+                **metrics_from_counts(
+                    tp=int((m_mask & p_mask).sum()),
+                    fp=int((~m_mask & p_mask).sum()),
+                    fn=int((m_mask & ~p_mask).sum()),
+                ),
             }
         )
 
