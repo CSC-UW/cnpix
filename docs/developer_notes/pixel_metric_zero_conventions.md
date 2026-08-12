@@ -67,13 +67,61 @@ Regression coverage: `tests/test_evaluation_metrics.py::test_complete_miss_score
 ## Stale derived artifacts
 
 The change alters only cells where `tp == 0`; every previously-defined value is
-bit-identical. Scored tables written before 2026-08-11 therefore have stale *derived*
-columns but valid `TP`/`FP`/`FN`/`TN`, so they can be refreshed by re-deriving from the
-stored counts — no re-detection needed. Known affected file:
+bit-identical. Scored tables written before 2026-08-11 therefore had stale *derived*
+columns but valid `TP`/`FP`/`FN`/`TN`, so they were refreshed by re-deriving from the
+stored counts — no re-detection needed.
 
-- `/Volumes/npx_nfs/nobak/offproj/novel_objects_deprivation/manual_vs_banded_and_bugnon_full48h_NREM.parquet`
-  (source of the manuscript's detector-vs-manual agreement table). Counts re-verified
-  2026-08-11: 134 rows, 7 with `nan` F1 and 5 with `nan` precision, and no `nan` in
-  `sensitivity` or `IoU`. **Not yet refreshed in place** — the file still predates the
-  fix (written 2026-07-13), so any mean taken from its `F1` or `precision` column is
-  still the biased one.
+**All four affected tables under
+`/Volumes/npx_nfs/nobak/offproj/novel_objects_deprivation/` were refreshed in place on
+2026-08-11**, each with a `.parquet.bak-2026-08-11` alongside (that tree is `nobak`):
+
+| file | rows | cells fixed |
+|---|---:|---:|
+| `manual_vs_banded_and_bugnon_full48h_NREM.parquet` (manuscript Table 1) | 134 | 12 |
+| `manual_vs_bugnon.parquet` | 162 | 22 |
+| `manual_vs_mua-bugnon.parquet` | 168 | 34 |
+| `manual_vs_banded_NREM.parquet` | 47 | 2 |
+
+`manual_vs_mua-bugnon_full48h.parquet` (174 rows) had no affected cell and was left
+alone. Verified after writing: `TP`/`FP`/`FN`/`TN` unchanged, every altered cell was
+`nan` before and is finite now, no well-defined value moved, column order preserved.
+
+The refresh procedure, should another such table turn up:
+
+```python
+rec = pd.DataFrame([metrics_from_counts(int(r.TP), int(r.FP), int(r.FN), tn=int(r.TN))
+                    for r in d.itertuples()])
+# assert the already-defined rows are bit-identical BEFORE writing, then:
+for c in ["sensitivity", "specificity", "precision", "F1", "IoU"]:
+    d[c] = rec[c].to_numpy()
+```
+
+`threshold_sweep_{blas,llas}.parquet` (2,900 and 2,700 rows; 542 and 38 affected) were
+**deleted** rather than refreshed — zero referencing files, and their producer
+`offproj.bugnon.threshold_sweep` was removed the same day. Note they would not have
+been wrong for their actual use: `nan` loses an `argmax`, so threshold *selection* was
+never biased. Only means were.
+
+### What this does not fix
+
+Numbers already *quoted* from these tables were computed under the old convention and
+do not update themselves. For the Table 1 source, under the grouping its own notebook
+uses (`batch_manual_vs_banded_and_bugnon.ipynb`, cell 10):
+
+| row | F1 old → new | precision old → new |
+|---|---|---|
+| `banded-fixed_tiled` | 0.4825 → **0.4492** | 0.4444 → 0.4290 |
+| `banded-greedy_fr` | 0.6664 → **0.6294** | 0.6950 → 0.6950 |
+| `mua-llas` | 0.6242 → 0.6242 | 0.7313 → 0.7313 |
+| `mua-clas` | 0.6234 → **0.5804** | 0.8173 → **0.7609** |
+| `mua-blas` | 0.5886 → **0.5480** | 0.8667 → **0.8070** |
+
+**`mua-llas` is the one row that does not move** — it had no affected cell. Every other
+row's F1 drops 0.033–0.043, and `clas`/`blas` precision drops ~0.06.
+
+`batch_manual_vs_banded_and_bugnon.ipynb` still carries **stored outputs computed under
+the old convention** (cell 10 takes `.mean()` over `F1` directly). Its `df` comes from
+`head_to_head.head_to_head_experiment(...)`, which re-derives rather than reading the
+parquet, so re-running the notebook regenerates correct values from the fixed kernel —
+but it re-detects and needs NFS. Until it is re-run, trust the refreshed parquet over
+the notebook's displayed figures.
