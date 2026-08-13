@@ -115,9 +115,9 @@ def load_manual_labels(
 def reconcile_to_common_grid(*arrays: np.ndarray) -> list[np.ndarray]:
     """Crop label arrays to a common ``(n_chunks, n_rows, n_samples)`` grid.
 
-    Takes the top-left origin (``arr[:c, :r, :s]``), matching the top-anchored
-    convention in ``offproj.stacks.read.load_labels`` (which pads a short label
-    array at the *bottom* of the y-axis). A no-op when shapes already match;
+    Takes the top-left origin (``arr[:c, :r, :s]``): label arrays are
+    top-anchored, so a short one is padded at the *bottom* of the y-axis.
+    A no-op when shapes already match;
     resilient to off-by-one chunk/sample differences across the model cohort.
     """
     if not arrays:
