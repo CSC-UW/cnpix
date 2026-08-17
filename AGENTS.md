@@ -111,7 +111,7 @@ identity across the recording.
 - `QUALITY_TIERS` order matters: tiers are nested, and `assign_cluster_quality` relies on
   iterating permissive→strict so the strictest passing tier wins.
 - `cnpix.units.get_threshold_kwargs()["sua_moderate"]` must stay identical to
-  `offproj.units.QUALITY_FILTERS["su1"]`; a regression test pins this.
+  `cnpix_local_sleep.units.QUALITY_FILTERS["su1"]`; a regression test pins this.
 
 ### Cohort
 

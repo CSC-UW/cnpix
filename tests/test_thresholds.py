@@ -37,7 +37,7 @@ def test_every_tier_has_threshold_kwargs():
 
 
 def test_sua_moderate_matches_offproj_su1():
-    # offproj.units.QUALITY_FILTERS["su1"] is built from these same arguments;
+    # cnpix_local_sleep.units.QUALITY_FILTERS["su1"] is built from these same arguments;
     # the two names must not drift apart.
     assert thresholds.get_threshold_kwargs()["sua_moderate"] == dict(
         required_threshold="conservative",

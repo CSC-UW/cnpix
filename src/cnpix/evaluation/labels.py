@@ -2,7 +2,7 @@
 
 Method-agnostic ground-truth (manual) label loaders, plus
 instance-label QC, channel->stack-row mapping, grid reconciliation, and chunk
-selection. Extracted from ``offproj.bugnon.manual_validation`` so all detection
+selection. Extracted from ``cnpix_local_sleep.morphological.manual_validation`` so all detection
 methods share one ground-truth-handling implementation.
 """
 

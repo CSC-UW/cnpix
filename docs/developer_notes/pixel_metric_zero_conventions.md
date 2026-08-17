@@ -7,8 +7,8 @@ updated: 2026-08-11
 # Zero vs. undefined in `metrics_from_counts`
 
 `cnpix.evaluation.metrics.metrics_from_counts` backs every OFF-label scorer in the
-workspace (`offproj.bugnon.manual_validation`, `offproj.evaluation.bugnon_eval`,
-`offproj.unit_based.banded_eval`, `offproj.unit_based.head_to_head`,
+workspace (`cnpix_local_sleep.morphological.manual_validation`, `cnpix_local_sleep.morphological.full48h_eval`,
+`cnpix_local_sleep.unit_based.banded_eval`, `cnpix_local_sleep.evaluation.head_to_head`,
 `samoffs.model_eval`) — all five verified 2026-08-11. None of those modules take a
 cross-structure mean themselves — they return tidy per-structure frames and the
 averaging happens downstream in notebooks. That is what made the bug below invisible.
@@ -77,7 +77,7 @@ stored counts — no re-detection needed.
 
 | file | rows | cells fixed |
 |---|---:|---:|
-| `manual_vs_banded_and_bugnon_full48h_NREM.parquet` (manuscript Table 1) | 134 | 12 |
+| `manual_vs_banded_and_morphological_full48h_NREM.parquet` (manuscript Table 1) | 134 | 12 |
 | `manual_vs_bugnon.parquet` | 162 | 22 |
 | `manual_vs_morphological.parquet` | 168 | 34 |
 | `manual_vs_banded_NREM.parquet` | 47 | 2 |
@@ -106,7 +106,7 @@ never biased. Only means were.
 
 Numbers already *quoted* from these tables were computed under the old convention and
 do not update themselves. For the Table 1 source, under the grouping its own notebook
-uses (`batch_manual_vs_banded_and_bugnon.ipynb`, cell 10):
+uses (`batch_manual_vs_banded_and_morphological.ipynb`, cell 10):
 
 | row | F1 old → new | precision old → new |
 |---|---|---|
@@ -119,7 +119,7 @@ uses (`batch_manual_vs_banded_and_bugnon.ipynb`, cell 10):
 **`mua-llas` is the one row that does not move** — it had no affected cell. Every other
 row's F1 drops 0.033–0.043, and `clas`/`blas` precision drops ~0.06.
 
-`batch_manual_vs_banded_and_bugnon.ipynb` still carries **stored outputs computed under
+`batch_manual_vs_banded_and_morphological.ipynb` still carries **stored outputs computed under
 the old convention** (cell 10 takes `.mean()` over `F1` directly). Its `df` comes from
 `head_to_head.head_to_head_experiment(...)`, which re-derives rather than reading the
 parquet, so re-running the notebook regenerates correct values from the fixed kernel —

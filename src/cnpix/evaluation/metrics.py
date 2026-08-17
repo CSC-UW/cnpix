@@ -6,7 +6,7 @@ inputs are instance-segmentation arrays of shape
 ``(n_chunks, n_rows, n_samples)`` where ``0`` is background and positive
 integers are per-event instance IDs; the kernels binarize with ``> 0``.
 
-These were extracted from ``offproj.bugnon.manual_validation`` so that every
+These were extracted from ``cnpix_local_sleep.morphological.manual_validation`` so that every
 detection method (morphological, sam3, harding, unit_based) can be scored against
 the same manual labels. The ``predicted`` argument was historically named
 ``bugnon``.
