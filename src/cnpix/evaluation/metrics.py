@@ -7,7 +7,7 @@ inputs are instance-segmentation arrays of shape
 integers are per-event instance IDs; the kernels binarize with ``> 0``.
 
 These were extracted from ``offproj.bugnon.manual_validation`` so that every
-detection method (mua-bugnon, sam3, harding, unit_based) can be scored against
+detection method (morphological, sam3, harding, unit_based) can be scored against
 the same manual labels. The ``predicted`` argument was historically named
 ``bugnon``.
 """

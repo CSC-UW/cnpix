@@ -19,7 +19,7 @@ NREM_CONDITION = "Early.REC.NREM"
 WAKE_CONDITION = "Late.NOD.Wake"
 
 # The Wake image stacks + timestamps.zarr were written under a TRUNCATED
-# condition directory ("Late.NOD"), while manual labels and the mua-bugnon
+# condition directory ("Late.NOD"), while manual labels and the morphological
 # parquet use the canonical "Late.NOD.Wake". Resolve eval condition -> stack dir.
 STACK_CONDITION = {WAKE_CONDITION: "Late.NOD"}
 

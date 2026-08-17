@@ -1,7 +1,7 @@
 """Method-agnostic evaluation of OFF-period detections against manual labels.
 
 Manual ("ground truth") OFF labels are shared infrastructure: every detection
-method — mua-bugnon, SAM3, harding, unit-based — is scored against the same
+method — morphological, SAM3, harding, unit-based — is scored against the same
 annotated image stacks, and two papers analyzing these rats would be
 embarrassed to disagree about what a hit is. So the ground truth, the label QC,
 and the metric kernels live here rather than in any one project package.

@@ -55,7 +55,7 @@ tell which the caller is doing, so it now emits the honest value in both.
 (The worked example here was `offproj.bugnon.threshold_sweep`, which picked a
 per-structure quantile by `idxmax` on IoU. That module was deleted on 2026-08-11 —
 it swept candidate quantiles against the manual labels, but the thresholds were
-ultimately hand-set in the mua-bugnon tuner, so it had no remaining user. No
+ultimately hand-set in the morphological tuner, so it had no remaining user. No
 argmax consumer of these metrics remains in the tree; the caveat is kept because
 the constraint applies to any that returns.)
 
@@ -79,10 +79,10 @@ stored counts — no re-detection needed.
 |---|---:|---:|
 | `manual_vs_banded_and_bugnon_full48h_NREM.parquet` (manuscript Table 1) | 134 | 12 |
 | `manual_vs_bugnon.parquet` | 162 | 22 |
-| `manual_vs_mua-bugnon.parquet` | 168 | 34 |
+| `manual_vs_morphological.parquet` | 168 | 34 |
 | `manual_vs_banded_NREM.parquet` | 47 | 2 |
 
-`manual_vs_mua-bugnon_full48h.parquet` (174 rows) had no affected cell and was left
+`manual_vs_morphological_full48h.parquet` (174 rows) had no affected cell and was left
 alone. Verified after writing: `TP`/`FP`/`FN`/`TN` unchanged, every altered cell was
 `nan` before and is finite now, no well-defined value moved, column order preserved.
 
