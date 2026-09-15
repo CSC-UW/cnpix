@@ -18,17 +18,6 @@ from __future__ import annotations
 NREM_CONDITION = "Early.REC.NREM"
 WAKE_CONDITION = "Late.NOD.Wake"
 
-# The Wake image stacks + timestamps.zarr sit under condition="Late.NOD" but
-# hold the Late.NOD.Wake window (audited 2026-09-15, cnpix-local-sleep
-# docs/reports); labels and parquets use "Late.NOD.Wake". Resolve eval -> stack dir.
-STACK_CONDITION = {WAKE_CONDITION: "Late.NOD"}
-
-
-def stack_condition(condition: str) -> str:
-    """Map an evaluation condition to its on-disk image-stack directory name."""
-    return STACK_CONDITION.get(condition, condition)
-
-
 # Filters: all three for NREM; only llas is defined for Wake (clas/blas are
 # sleep-only). Which trained model a given evaluation is scored against is a
 # SAM3 concern and lives in ``samoffs.config.MODEL_KEYS``.
