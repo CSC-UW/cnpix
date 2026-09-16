@@ -93,8 +93,13 @@ def load_manual_labels(
     probe: str,
     condition: str = config.NREM_CONDITION,
     version: str = "latest",
+    *,
+    allow_stale: bool = False,
 ) -> np.ndarray:
     """Load a manual label array from its NPZ file.
+
+    Raises :class:`cnpix.evaluation.paths.StaleDataError` if the label directory
+    carries a ``STALE.json`` marker, unless ``allow_stale=True``.
 
     Returns
     -------
@@ -103,6 +108,7 @@ def load_manual_labels(
         IDs (0 = background).
     """
     path = _get_manual_labels_path(subject, probe, condition, version=version)
+    paths.check_not_stale(path.parent, allow_stale=allow_stale)
     npz = np.load(path)
     return npz[list(npz.keys())[0]]
 

@@ -26,6 +26,9 @@ __all__ = [
     "DEFAULT_EXPERIMENT",
     "MANUAL_LABELS_PROJECT",
     "MODEL_LABELS_PROJECT",
+    "STALE_MARKER",
+    "StaleDataError",
+    "check_not_stale",
     "experiment_root",
     "label_dir",
 ]
@@ -85,3 +88,41 @@ def label_dir(
         if value is not None:
             d = d / f"{key}={value}"
     return d
+
+
+#: Presence of this file in a stack or label directory marks its contents as
+#: aligned to a superseded hypnogram (or otherwise unsafe to combine with current
+#: data). Readers refuse such directories unless explicitly told otherwise.
+STALE_MARKER = "STALE.json"
+
+
+class StaleDataError(RuntimeError):
+    """Raised when a reader is pointed at a directory carrying a STALE marker."""
+
+
+def check_not_stale(directory: pathlib.Path, *, allow_stale: bool = False) -> None:
+    """Raise :class:`StaleDataError` if ``directory`` holds a ``STALE.json``.
+
+    The marker is written by hand (see the label-organization developer note)
+    and holds at least ``reason``; the message quotes it so the caller learns
+    what the data actually match. ``allow_stale=True`` bypasses the check for
+    code that knowingly works with the stale grid.
+    """
+    if allow_stale:
+        return
+    marker = pathlib.Path(directory) / STALE_MARKER
+    if not marker.exists():
+        return
+    import json
+
+    try:
+        info = json.loads(marker.read_text())
+        reason = info.get("reason", "(no reason recorded)")
+        replacement = info.get("replacement")
+    except (OSError, ValueError):
+        reason, replacement = "(unreadable marker)", None
+    msg = f"{directory} is marked stale: {reason}"
+    if replacement:
+        msg += f" Use {replacement} instead,"
+    msg += " or pass allow_stale=True to load it deliberately."
+    raise StaleDataError(msg)
