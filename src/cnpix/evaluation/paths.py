@@ -10,6 +10,10 @@ with it::
 
     project > experiment > subject > method > model > probe > structure > condition
 
+Inside the ``samoffs`` project the ``method`` component is not used (that
+project is SAM3-only), so model label paths run straight from ``subject`` to
+``model``.
+
 Only ``offproj.files`` may add components; if this list and that schema ever
 disagree about ordering, that schema wins.
 """
@@ -36,8 +40,8 @@ __all__ = [
 DEFAULT_EXPERIMENT: str = constants.DEFAULT_EXPERIMENT
 
 #: Manual ground-truth labels are shared (s3-backed); model predictions are not.
-MANUAL_LABELS_PROJECT = "offproj_s3"
-MODEL_LABELS_PROJECT = "offproj"
+MANUAL_LABELS_PROJECT = "samoffs_s3"
+MODEL_LABELS_PROJECT = "samoffs"
 
 # Components that take a ``key=value`` directory, in schema order.
 _KEYED = ("method", "model", "probe", "structure", "condition")
@@ -66,14 +70,13 @@ def label_dir(
     Components left as ``None`` are omitted, so callers get exactly the depth
     they ask for::
 
-        label_dir("offproj_s3", "CNPIX15-Claude", probe="imec0",
+        label_dir("samoffs_s3", "CNPIX15-Claude", probe="imec0",
                   condition="Early.REC.NREM")
         # .../{experiment}/CNPIX15-Claude/probe=imec0/condition=Early.REC.NREM
 
-        label_dir("offproj", "CNPIX15-Claude", method="sam3",
-                  model="trained-on-Early.REC.NREM.2026-05-09",
+        label_dir("samoffs", "CNPIX15-Claude", model="2026-05-03_nrem-all",
                   probe="imec0", condition="Early.REC.NREM")
-        # .../method=sam3/model=trained-on-.../probe=imec0/condition=...
+        # .../model=2026-05-03_nrem-all/probe=imec0/condition=...
     """
     d = experiment_root(project, experiment) / subject
     values = {

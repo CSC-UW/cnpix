@@ -29,7 +29,7 @@ def _manual_labels_filename(version: str) -> str:
     """Map a version label to its on-disk manual-label filename.
 
     ``"latest"`` resolves to the ``manual_off_labels.npz`` symlink maintained
-    by ``offproj/scripts/update_manual_off_labels_symlinks.py`` (highest ``vN``
+    by ``cnpix-local-sleep/scripts/update_manual_off_labels_symlinks.py`` (highest ``vN``
     present). Explicit ``"v1"``, ``"v2"``, … pin a specific version file.
     """
     if not _VERSION_RE.fullmatch(version):
@@ -48,7 +48,7 @@ def _get_manual_labels_path(
 ):
     """Path to a manual-label NPZ for one (subject, probe, condition).
 
-    Files live under the ``offproj_s3`` project in the Hive-partitioned layout
+    Files live under the ``samoffs_s3`` project in the Hive-partitioned layout
     ``{subject}/probe={probe}/condition={condition}/{filename}``.
     """
     return paths.label_dir(
@@ -60,7 +60,7 @@ def _get_manual_labels_path(
 
 
 def _get_manual_labels_root():
-    """Experiment root directory containing manual label files (offproj_s3)."""
+    """Experiment root directory containing manual label files (samoffs_s3)."""
     return paths.experiment_root(paths.MANUAL_LABELS_PROJECT)
 
 
