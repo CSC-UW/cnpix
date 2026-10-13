@@ -19,13 +19,16 @@ __all__ = [
 MAJOR_REGIONS: tuple[str, ...] = ("hippocampal", "thalamic", "cortical", "other")
 
 _ATLAS_NAME = "whs_sd_rat_39um"
+_ATLAS_VERSION = "3.0"
 
 
 @lru_cache(maxsize=1)
 def _get_atlas():
     import brainglobe_atlasapi
 
-    return brainglobe_atlasapi.BrainGlobeAtlas(_ATLAS_NAME, check_latest=False)
+    return brainglobe_atlasapi.BrainGlobeAtlas(
+        _ATLAS_NAME, version=_ATLAS_VERSION, check_latest=False
+    )
 
 
 @lru_cache(maxsize=1)
