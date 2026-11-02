@@ -31,7 +31,7 @@ uv run --all-extras --group dev ruff check ../cnpix/src
 
 | Module | Purpose |
 |---|---|
-| `cnpix.units` | Unit quality tiers, ACG metrics, cell-type classification |
+| `cnpix.units` | Unit quality tiers, ACG metrics, cell-type classification, the rat atlas and acronym-to-region/clade mapping (`regions`) |
 | `cnpix.f25` | Findlay-2025 LFP/CSD helpers, plus `ipower` (shared with the local-sleep paper) |
 | `cnpix.mua` | MUA amplitude envelope: preprocessing chain, `mua_traces.zarr` paths, legacy motion, NVMe staging |
 | `cnpix.evaluation` | Manual OFF-period ground truth, label QC, pixel/event metric kernels |

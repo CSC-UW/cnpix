@@ -1,10 +1,10 @@
-"""Map Waxholm atlas acronyms onto major brain regions.
+"""Map Waxholm atlas acronyms onto major brain regions and onto clades.
 
 Used to decide which cell-type criteria apply to a unit: the Petersen scheme is
 defined for cortex and hippocampus only (see :mod:`cnpix.units.celltypes`).
 """
 
-from functools import lru_cache
+from functools import cache, lru_cache
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,8 @@ import pandas as pd
 __all__ = [
     "MAJOR_REGIONS",
     "add_major_regions",
+    "get_atlas",
+    "get_clade",
     "hippocampus_to_waxholm",
 ]
 
@@ -23,7 +25,13 @@ _ATLAS_VERSION = "3.0"
 
 
 @lru_cache(maxsize=1)
-def _get_atlas():
+def get_atlas():
+    """Waxholm Space SD rat atlas, brainglobe package version 3.0.
+
+    Identical content to the pre-brainglobe-atlasapi-3 package version 1.2:
+    same structures, ids, names, hierarchy, colours, annotation, hemisphere and
+    template volumes; meshes differ only by Draco quantization (< 0.1 um).
+    """
     import brainglobe_atlasapi
 
     return brainglobe_atlasapi.BrainGlobeAtlas(
@@ -31,10 +39,30 @@ def _get_atlas():
     )
 
 
+@cache
+def get_clade(structure: str) -> str:
+    """The clade of a Waxholm acronym: ``Thal-D``, ``HF``, ``Cx``, ``Str`` or ``Other``.
+
+    A structure belongs to the first of ``Thal-D``, ``Cx`` and ``Str`` that it is
+    or descends from; within ``Cx``, ``HF`` and its descendants are ``HF``.
+    ``CLA`` is ``Cx``.
+    """
+    ancestors = get_atlas().get_structure_ancestors(structure)
+    if "Thal-D" in ancestors or structure == "Thal-D":
+        return "Thal-D"
+    if "Cx" in ancestors or structure == "Cx":
+        return "HF" if "HF" in ancestors or structure == "HF" else "Cx"
+    if "Str" in ancestors or structure == "Str":
+        return "Str"
+    if structure == "CLA":
+        return "Cx"
+    return "Other"
+
+
 @lru_cache(maxsize=1)
 def _region_acronym_sets() -> dict[str, frozenset[str]]:
     """Acronyms belonging to each atlas super-structure, including the root itself."""
-    atlas = _get_atlas()
+    atlas = get_atlas()
     return {
         key: frozenset(atlas.get_structure_descendants(key) + [key])
         for key in ("HF", "Thal-D", "Cx")

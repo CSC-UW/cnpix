@@ -15,3 +15,18 @@ class TestHippocampusToWaxholm:
     def test_non_hippocampal_acronyms_are_untouched(self):
         for acronym in ("M2", "PPC", "CLA", "VPM"):
             assert regions.hippocampus_to_waxholm(acronym) == acronym
+
+
+class TestGetClade:
+    def test_each_clade(self):
+        expected = {
+            "VPM": "Thal-D",
+            "CA1": "HF",
+            "HF": "HF",
+            "M2": "Cx",
+            "PPC": "Cx",
+            "CLA": "Cx",
+            "CPu": "Str",
+            "SN": "Other",
+        }
+        assert {s: regions.get_clade(s) for s in expected} == expected
