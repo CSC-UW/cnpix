@@ -5,11 +5,13 @@ unit-based agreement analysis in ``offproj``, so its two contracts are
 worth pinning: *genuinely* undefined ratios are ``nan`` (not 0) while a
 detector's outright misses score a defined 0, and omitting ``tn`` drops the
 negative-class columns entirely rather than reporting them as 0.
+``compute_event_metrics`` applies the same miss-is-0 contract to event precision.
 """
 
 import math
 
-from cnpix.evaluation.metrics import metrics_from_counts
+import numpy as np
+from cnpix.evaluation.metrics import compute_event_metrics, metrics_from_counts
 
 
 def test_derived_ratios():
@@ -92,3 +94,37 @@ def test_column_order_is_stable():
     assert list(metrics_from_counts(1, 1, 1)) == [
         "TP", "FP", "FN", "sensitivity", "precision", "F1", "IoU",
     ]
+
+
+def _event_metrics(manual, predicted):
+    return compute_event_metrics(
+        manual, predicted, np.array([0]), np.ones(manual.shape[1], bool), with_iou=False
+    )
+
+
+def test_event_precision_counts_predicted_events_touching_any_manual_event():
+    manual = np.zeros((1, 2, 10), np.int32)
+    manual[0, 0, 1:4] = 1
+    predicted = np.zeros_like(manual)
+    predicted[0, 0, 3:5] = 1  # overlaps the manual event
+    predicted[0, 1, 7:9] = 2  # overlaps nothing
+    ev = _event_metrics(manual, predicted)
+    assert ev["event_precision"] == 0.5
+    assert ev["event_false_discovery_rate"] == 0.5
+    assert ev["event_sensitivity"] == 1.0
+
+
+def test_event_precision_of_detector_returning_nothing_is_zero_not_nan():
+    manual = np.zeros((1, 2, 10), np.int32)
+    manual[0, 0, 1:4] = 1
+    ev = _event_metrics(manual, np.zeros_like(manual))
+    assert ev["event_precision"] == 0.0
+    assert ev["event_sensitivity"] == 0.0
+    assert math.isnan(ev["event_false_discovery_rate"])
+
+
+def test_event_precision_of_empty_comparison_is_nan():
+    empty = np.zeros((1, 2, 10), np.int32)
+    ev = _event_metrics(empty, empty.copy())
+    assert math.isnan(ev["event_precision"])
+    assert math.isnan(ev["event_sensitivity"])

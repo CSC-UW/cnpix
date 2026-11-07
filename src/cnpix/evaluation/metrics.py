@@ -214,8 +214,11 @@ def compute_event_metrics(
         Event-level metrics including ``n_manual_events``,
         ``n_predicted_events``, ``n_manual_detected``,
         ``n_predicted_unmatched``, ``event_sensitivity``,
-        ``event_false_discovery_rate``, and ``per_event_ious``
-        (numpy array; empty when ``with_iou`` is False).
+        ``event_false_discovery_rate``, ``event_precision``, and
+        ``per_event_ious`` (numpy array; empty when ``with_iou`` is False).
+        ``event_precision`` follows :func:`metrics_from_counts`: a detector that
+        emits nothing where manual events exist scores 0, not ``nan``.
+        ``event_false_discovery_rate`` stays ``nan`` there (no discoveries).
     """
     rows = np.where(row_mask)[0]
     m_sub = manual[np.ix_(chunks, rows)]
@@ -256,6 +259,11 @@ def compute_event_metrics(
         if n_predicted > 0
         else float("nan")
     )
+    event_precision = (
+        n_predicted_matched / n_predicted
+        if n_predicted > 0
+        else (0.0 if n_manual > 0 else float("nan"))
+    )
 
     # Per-event soft IoU (manual event vs union of overlapping predicted events),
     # only for detected events (undetected -> 0.0). Optional: it is a per-event
@@ -283,6 +291,7 @@ def compute_event_metrics(
         "n_predicted_unmatched": n_predicted - n_predicted_matched,
         "event_sensitivity": event_sensitivity,
         "event_false_discovery_rate": event_fdr,
+        "event_precision": event_precision,
         "per_event_ious": per_event_ious,
     }
 
