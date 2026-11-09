@@ -179,29 +179,56 @@ class _UnionFind:
 _STRUCT_8CONN = np.ones((3, 3), dtype=int)
 
 
+def chunk_contiguity(stack_times: np.ndarray) -> np.ndarray:
+    """Whether each chunk starts one sample after the previous chunk ends.
+
+    ``stack_times`` is ``(n_chunks, samples_per_chunk)``. Returns a boolean array of
+    length ``n_chunks - 1`` for :func:`qc_and_fix_labels`'s ``contiguous``.
+    """
+    dt = np.median(np.diff(stack_times, axis=1))
+    gap = stack_times[1:, 0] - stack_times[:-1, -1]
+    return np.abs(gap - dt) < 0.5 * dt
+
+
 def qc_and_fix_labels(
     labels: np.ndarray,
     *,
     min_component_size: int = 50,
+    contiguous: np.ndarray | None = None,
 ) -> tuple[np.ndarray, list[dict]]:
     """Check label contiguity and fix non-contiguous labels.
 
     Each unique label should correspond to a single connected component,
-    possibly spanning consecutive chunk boundaries. Labels that have multiple
-    disconnected groups are split into separate labels. Tiny components (below
-    ``min_component_size`` pixels) are removed as stray annotation marks.
+    possibly spanning consecutive chunk boundaries. In order:
 
-    Uses 8-connectivity; components in consecutive chunks are merged when the
-    label touches both sides of the chunk boundary.
+    1. Labels that have multiple disconnected groups are split into separate
+       labels; groups below ``min_component_size`` pixels are removed as stray
+       annotation marks.
+    2. Different labels that touch across a chunk boundary are merged into the
+       smaller label: one event continued into the next chunk under a new id.
+    3. Labels below ``min_component_size`` pixels in total are removed as stray
+       marks, even when they carry their own id.
+
+    Uses 8-connectivity. Chunk ``i + 1`` continues chunk ``i`` only where
+    ``contiguous[i]`` is True (see :func:`chunk_contiguity`); ``None`` treats
+    every pair of consecutive chunks as contiguous.
 
     Returns
     -------
     fixed_labels
         Corrected label array (same shape as input).
     violations
-        List of violation dicts with keys ``original_label``, ``chunks``,
-        ``n_groups_after_merge``, ``n_removed``, ``n_split``, ``removed_sizes``.
+        List of dicts, each with a ``kind`` and the ``original_label``:
+        ``"split"`` (keys ``chunks``, ``n_groups_after_merge``, ``n_removed``,
+        ``n_split``, ``removed_sizes``), ``"boundary_merge"`` (``merged_into``,
+        ``chunks``) and ``"stray"`` (``removed_sizes``).
     """
+    n_boundaries = max(labels.shape[0] - 1, 0)
+    if contiguous is None:
+        contiguous = np.ones(n_boundaries, dtype=bool)
+    contiguous = np.asarray(contiguous, dtype=bool)
+    if contiguous.shape != (n_boundaries,):
+        raise ValueError(f"contiguous must have shape ({n_boundaries},); got {contiguous.shape}")
     fixed = labels.copy()
     # Restrict all per-label work to chunks that actually contain a label, and
     # build a label -> sorted-chunks map in a single pass over those chunks. This
@@ -243,8 +270,8 @@ def qc_and_fix_labels(
         for i in range(len(chunks_with_label) - 1):
             ci = chunks_with_label[i]
             cj = chunks_with_label[i + 1]
-            if cj != ci + 1:
-                continue  # non-consecutive chunks can't connect
+            if cj != ci + 1 or not contiguous[ci]:
+                continue  # non-consecutive or non-contiguous chunks can't connect
             img_i = comp_imgs[ci]
             img_j = comp_imgs[cj]
             # 8-connectivity across the chunk boundary: a pixel at
@@ -324,6 +351,7 @@ def qc_and_fix_labels(
 
         violations.append(
             {
+                "kind": "split",
                 "original_label": int(lbl),
                 "chunks": chunks_with_label.tolist(),
                 "n_groups_after_merge": len(groups),
@@ -333,7 +361,73 @@ def qc_and_fix_labels(
             }
         )
 
+    violations += _merge_across_boundaries(fixed, contiguous)
+    violations += _remove_stray_labels(fixed, min_component_size)
     return fixed, violations
+
+
+def _labeled_chunks(labels: np.ndarray) -> np.ndarray:
+    return np.where(np.any(labels > 0, axis=(1, 2)))[0]
+
+
+def _merge_across_boundaries(fixed: np.ndarray, contiguous: np.ndarray) -> list[dict]:
+    """Relabel, in place, distinct labels touching across a contiguous chunk boundary."""
+    labeled = set(_labeled_chunks(fixed).tolist())
+    uf = _UnionFind()
+    where: dict[int, set[int]] = {}
+    for ci in sorted(labeled):
+        cj = ci + 1
+        if cj not in labeled or not contiguous[ci]:
+            continue
+        left, right = fixed[ci][:, -1], fixed[cj][:, 0]
+        for drow in (-1, 0, 1):
+            a = left[max(-drow, 0): len(left) - max(drow, 0)]
+            b = right[max(drow, 0): len(right) - max(-drow, 0)]
+            m = (a > 0) & (b > 0) & (a != b)
+            for x, y in zip(a[m].tolist(), b[m].tolist()):
+                uf.union(x, y)
+                where.setdefault(x, set()).update((ci, cj))
+                where.setdefault(y, set()).update((ci, cj))
+    groups: dict[int, list[int]] = {}
+    for lbl in where:
+        groups.setdefault(uf.find(lbl), []).append(lbl)
+    remap = {lbl: min(members) for members in groups.values() for lbl in members if lbl != min(members)}
+    if not remap:
+        return []
+    src = np.fromiter(remap, dtype=fixed.dtype)
+    for ci in sorted(labeled):
+        img = fixed[ci]
+        hit = np.isin(img, src)
+        if hit.any():
+            for s in np.unique(img[hit]).tolist():
+                img[img == s] = remap[s]
+    return [
+        {"kind": "boundary_merge", "original_label": int(s), "merged_into": int(d),
+         "chunks": sorted(where[s])}
+        for s, d in sorted(remap.items())
+    ]
+
+
+def _remove_stray_labels(fixed: np.ndarray, min_component_size: int) -> list[dict]:
+    """Zero, in place, labels whose total size across chunks is below the floor."""
+    labeled = _labeled_chunks(fixed)
+    if not len(labeled):
+        return []
+    n = int(fixed[labeled].max()) + 1
+    sizes = np.zeros(n, dtype=np.int64)
+    for ci in labeled:
+        sizes += np.bincount(fixed[ci].ravel(), minlength=n)
+    stray = np.flatnonzero((sizes > 0) & (sizes < min_component_size))
+    stray = stray[stray > 0]
+    if not len(stray):
+        return []
+    for ci in labeled:
+        img = fixed[ci]
+        img[np.isin(img, stray)] = 0
+    return [
+        {"kind": "stray", "original_label": int(s), "removed_sizes": [int(sizes[s])]}
+        for s in stray
+    ]
 
 
 # ======================================================================
